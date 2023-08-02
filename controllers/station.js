@@ -1,37 +1,71 @@
-import { response } from "express";
+import { request, response } from "express";
+import Station from "../models/station.js";
 
-const getStation = (req, res = response) => {
+const getStation = async(req = request, res = response) => {
+    const stations = await Station.find();
     res.json({
-        message: 'GET Station from controller'
+        stations
     })
 }
 
-const postStation = (req, res = response) => {
+const getStationById = async(req = request, res = response) => {
+    const id = req.params.id;
+    const station = await Station.findById(id);
     res.json({
-        message: 'POST Station from controller'
+        station
     })
 }
-const patchStation = (req, res = response) => {
+
+const postStation = async (req = request, res = response) => {
+    const { title, ...resto } = req.body;
+    const station = new Station({
+        title,
+        status: false, 
+        created_at: Date.now(), 
+        updated_at: Date.now(), 
+        deleted_at: null,
+        ...resto
+    });
+    const existTitle = await Station.findOne({ title });
+    if (existTitle) {
+        return res.status(400).json({
+            message: 'Ya existe una estación con ese nombre'
+        })
+    }
+    station.save();
+    res.json({
+        station
+    })
+}
+const patchStation = (req = request, res = response) => {
     res.json({
         message: 'PATCH Station from controller'
     })
 }
 
-const putStation = (req, res = response) => {
+const putStation = async (req = request, res = response) => {
+    const id = req.params.id;
+    const {_id, title, updated_at,...resto } = req.body;
+    resto.updated_at = Date.now();
+    const station = await Station.findByIdAndUpdate(id, resto);
     res.json({
-        message: 'PUT Station from controller'
-    })
+        station
+    })    
 }
 
-const deleteStation = (req, res = response) => {
+const deleteStation = async (req = request, res = response) => {
+    const id = req.params.id;
+    const updated_at = Date.now();
+    const deleted_at = Date.now();
+    const station = await Station.findByIdAndUpdate(id, { status: false , updated_at, deleted_at });
     res.json({
-        message: 'DELETE Station from controller'
+        station
     })
 }
-
 
 export {
     getStation,
+    getStationById,
     postStation,
     patchStation,
     putStation,
