@@ -1,4 +1,4 @@
-import Station from "../models/station.js";
+const { Station } = require("../models/station");
 
 const stationExistById = async(id) => {
     
@@ -8,6 +8,6 @@ const stationExistById = async(id) => {
     }
 }
 
-export {
+module.exports = {
     stationExistById
 }

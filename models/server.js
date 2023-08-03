@@ -1,13 +1,19 @@
-import express          from 'express'
-import cors             from 'cors'
-import router           from '../routes/station.js'
-import dbConnection     from '../database/config.js'
+const express                 = require('express')
+const cors                    = require('cors')
+const { router }              = require('../routes/station')
+const { dbConnection }        = require( '../database/config')
+const { createServer }        = require('http')
+const { socketController }    = require('../sockets/controller')
+const { Server:ServerIO }     = require('socket.io')
 
-export class Server {
+class Server {
     constructor() {
         this.app            = express();
         this.port           = process.env.PORT;
-        this.stationPath    = '/api/station';
+        this.server         = createServer(this.app);
+        this.ioOptions      = { cors: { origin: '*',
+                                        methods: ['GET', 'POST'] }};
+        this.io             = new ServerIO(this.server, this.ioOptions);
 
         this.connectDB();
 
@@ -16,13 +22,21 @@ export class Server {
 
         // Server Routes
         this.routes();
+
+        // Sockets
+        this.sockets()
+
+
     }
 
     middlewares() {
         // Public Files
         this.app.use(express.static('public'));
         // CORS
-        this.app.use(cors());
+        this.app.use(cors({
+            origin: '*',
+            methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        }));
         // JSON parser
         this.app.use(express.json());
     }
@@ -32,15 +46,21 @@ export class Server {
     }
 
     routes() {
-        this.app.use(this.stationPath, router);
+        this.app.use(process.env.STATION_PATH, router);
+    }
+
+    sockets() {
+        this.io.on('connection', (socket) => socketController (socket, this.io) )
     }
 
     listen() {
-        this.app.listen(this.port, () => {
+        this.server.listen(this.port, () => {
             console.log(`Aplicación corriendo en el puerto ${this.port}`);
         })
     }
 
 }
 
-
+module.exports = {
+    Server
+}

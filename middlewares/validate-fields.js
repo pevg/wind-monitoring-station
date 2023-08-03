@@ -1,4 +1,4 @@
-import { validationResult } from 'express-validator';
+const { validationResult } = require('express-validator');
 
 const fieldValidator = (req, res, next) => {
     const errors = validationResult(req);
@@ -8,4 +8,6 @@ const fieldValidator = (req, res, next) => {
     next();
 }
 
-export default fieldValidator;
+module.exports = {
+    fieldValidator
+}

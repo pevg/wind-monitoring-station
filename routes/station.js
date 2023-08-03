@@ -1,15 +1,19 @@
-import { Router } from "express";
-import { 
-    getStation,
-    getStationById, 
-    postStation, 
-    patchStation, 
-    putStation, 
-    deleteStation 
-} from "../controllers/station.js";
-import { check } from "express-validator";
-import fieldValidator from "../middlewares/validate-fields.js";
-import { stationExistById } from "../helpers/db-validators.js";
+const { Router } = require("express");
+
+const { fieldValidator } =  require("../middlewares/validate-fields");
+
+const { stationExistById } =  require("../helpers/db-validators");
+
+const { getStation,
+        getStationById, 
+        postStation, 
+        patchStation, 
+        putStation, 
+        deleteStation } = require("../controllers/station");
+
+const { check } =  require("express-validator");
+
+
 
 const router = Router();
 
@@ -44,4 +48,6 @@ router.delete('/:id', [
     fieldValidator], 
     deleteStation)
 
-export default router
+module.exports = {
+    router
+}
