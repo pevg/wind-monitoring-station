@@ -5,6 +5,7 @@ const { dbConnection }        = require( '../database/config')
 const { createServer }        = require('http')
 const { socketController }    = require('../sockets/controller')
 const { Server:ServerIO }     = require('socket.io')
+const { MqttServer }          = require('./mqtt.server')
 
 class Server {
     constructor() {
@@ -14,6 +15,8 @@ class Server {
         this.ioOptions      = { cors: { origin: '*',
                                         methods: ['GET', 'POST'] }};
         this.io             = new ServerIO(this.server, this.ioOptions);
+
+        this.mqttServer     = new MqttServer();
 
         this.connectDB();
 
@@ -25,6 +28,9 @@ class Server {
 
         // Sockets
         this.sockets()
+
+        // MQTT
+        this.mqtt()
 
 
     }
@@ -50,8 +56,31 @@ class Server {
     }
 
     sockets() {
-        this.io.on('connection', (socket) => socketController (socket, this.io) )
+        this.io.on('connection', (socket) => socketController (socket, this.io, this.mqttServer) )
     }
+
+    mqtt() {
+        const mqttClient = this.mqttServer.getClient();
+    
+        mqttClient?.on('connect', () => {
+          console.log('Conexión establecida con el broker MQTT.');
+          mqttClient.subscribe(this.mqttServer.topics.subscription, (err) => {
+            if (err) {
+              console.error('Error al suscribirse al tema', err);
+            } else {
+              console.log('Suscrito al tema', this.mqttServer.topics.subscription);
+            }
+          });
+        });
+    
+        mqttClient?.on('message', (topic, message) => {
+          console.log('Mensaje recibido del broker MQTT:', message.toString());
+          // Enviar el mensaje MQTT al cliente a través del socket
+          this.io.emit('mqttMessage', message.toString());
+        });
+      }
+        
+
 
     listen() {
         this.server.listen(this.port, () => {
